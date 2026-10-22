@@ -61,6 +61,7 @@ import { DeleteCandidateModal } from './delete-candidate-modal';
 import { AddAssignmentDialog } from './add-assignment-dialog';
 import { AddCompensationDialog } from './add-compensation-dialog';
 import { UploadContractDialog } from './upload-contract-dialog';
+import { RemoveFromPipelineModal } from '@/components/recruiting/remove-from-pipeline-modal';
 
 interface PersonProfileProps {
   person: Person;
@@ -78,6 +79,10 @@ export function PersonProfile({ person, onUpdatePersonStatus }: PersonProfilePro
   const [isAddAssignmentOpen, setIsAddAssignmentOpen] = useState(false);
   const [isAddCompOpen, setIsAddCompOpen] = useState(false);
   const [isUploadContractOpen, setIsUploadContractOpen] = useState(false);
+  const [candidateAppToRemove, setCandidateAppToRemove] = useState<{
+    applicationId: string;
+    openingTitle: string;
+  } | null>(null);
 
   const [docs, setDocs] = useState<Document[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -732,6 +737,23 @@ export function PersonProfile({ person, onUpdatePersonStatus }: PersonProfilePro
                           <span>Open Kanban</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </Link>
+
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCandidateAppToRemove({
+                                applicationId: app.id,
+                                openingTitle: app.openings?.title || 'Job Opening',
+                              })
+                            }
+                            className="px-2.5 py-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 border border-rose-500/20 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                            title="Remove candidate from this opening pipeline"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1240,6 +1262,23 @@ export function PersonProfile({ person, onUpdatePersonStatus }: PersonProfilePro
         personName={person.full_name}
         onContractUploaded={() => loadData()}
       />
+
+      {/* Remove from Pipeline Modal */}
+      {candidateAppToRemove && (
+        <RemoveFromPipelineModal
+          isOpen={true}
+          candidateName={person.full_name}
+          openingTitle={candidateAppToRemove.openingTitle}
+          applicationId={candidateAppToRemove.applicationId}
+          onClose={() => setCandidateAppToRemove(null)}
+          onRemoved={() => {
+            setApplications((prev) =>
+              prev.filter((a) => a.id !== candidateAppToRemove.applicationId)
+            );
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 }

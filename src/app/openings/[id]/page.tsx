@@ -394,6 +394,7 @@ function OpeningKanbanContent() {
         initialCandidates={candidates}
         onCandidateHire={() => loadOpeningData()}
         onCandidateReject={() => loadOpeningData()}
+        onCandidateRemove={() => loadOpeningData()}
         onOpenAddCandidate={() => setIsAddModalOpen(true)}
       />
 

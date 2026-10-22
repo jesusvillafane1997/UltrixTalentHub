@@ -390,6 +390,84 @@ export async function addCandidateToOpening(
   }
 }
 
+export async function removeCandidateFromOpening(
+  applicationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createAdminSupabaseClient();
+    const session = await getSessionUser();
+    const actorId = session?.id || '11111111-1111-1111-1111-111111111111';
+    const actorRole = (session?.role as any) || 'admin';
+
+    if (!Permissions.canEditCandidates(actorRole) && !Permissions.canManageOpenings(actorRole)) {
+      return {
+        success: false,
+        error: 'Forbidden: You do not have permission to remove candidates from the pipeline.',
+      };
+    }
+
+    // 1. Fetch application details before deletion
+    const { data: appData, error: fetchErr } = await supabase
+      .from('applications')
+      .select('id, person_id, opening_id, openings(title), people(full_name)')
+      .eq('id', applicationId)
+      .maybeSingle();
+
+    if (fetchErr || !appData) {
+      return { success: false, error: 'Application record not found or already removed.' };
+    }
+
+    const openingTitle = (appData as any).openings?.title || 'Opening';
+    const candidateName = (appData as any).people?.full_name || 'Candidate';
+    const nowIso = new Date().toISOString();
+
+    // 2. Delete application record
+    const { error: delErr } = await supabase
+      .from('applications')
+      .delete()
+      .eq('id', applicationId);
+
+    if (delErr) {
+      console.error('Delete application error:', delErr);
+      return { success: false, error: delErr.message };
+    }
+
+    // 3. Activity log
+    await supabase.from('activity_log').insert([
+      {
+        entity_type: 'applications',
+        entity_id: appData.opening_id,
+        person_id: appData.person_id,
+        actor_id: actorId,
+        action: 'removed_from_opening',
+        diff: {
+          application_id: applicationId,
+          opening_id: appData.opening_id,
+          candidate_name: candidateName,
+          opening_title: openingTitle,
+        },
+        note: `${candidateName} was removed from "${openingTitle}" recruitment pipeline.`,
+        created_at: nowIso,
+      },
+    ]);
+
+    // 4. Invalidate routes
+    revalidatePath(`/openings/${appData.opening_id}`);
+    revalidatePath('/openings');
+    revalidatePath(`/people/${appData.person_id}`);
+    revalidatePath('/people');
+    revalidatePath('/recruiting');
+    revalidatePath('/recruiting/candidates');
+    revalidatePath('/dashboard');
+    revalidatePath('/');
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('removeCandidateFromOpening error:', err);
+    return { success: false, error: err.message || 'Failed to remove candidate from pipeline.' };
+  }
+}
+
 export async function deleteOpening(
   openingId: string
 ): Promise<{ success: boolean; error?: string }> {

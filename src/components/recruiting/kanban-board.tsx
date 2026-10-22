@@ -27,6 +27,7 @@ import { moveCandidateStage } from '@/actions/openings';
 import { toast } from 'sonner';
 import { RejectionModal } from './rejection-modal';
 import { ScorecardModal } from './scorecard-modal';
+import { RemoveFromPipelineModal } from './remove-from-pipeline-modal';
 import {
   Clock,
   AlertTriangle,
@@ -37,6 +38,7 @@ import {
   Plus,
   Building,
   UserPlus,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -60,6 +62,7 @@ interface KanbanBoardProps {
   initialCandidates: KanbanCandidateItem[];
   onCandidateHire?: (personId: string) => void;
   onCandidateReject?: (personId: string, reason: RejectionReason, notes: string) => void;
+  onCandidateRemove?: (applicationId: string) => void;
   onOpenAddCandidate?: (openingId: string) => void;
 }
 
@@ -69,11 +72,13 @@ function DraggableCandidateCard({
   stages,
   onOpenScorecard,
   onMoveStage,
+  onRemoveCandidate,
 }: {
   item: KanbanCandidateItem;
   stages: PipelineStage[];
   onOpenScorecard: (item: KanbanCandidateItem) => void;
   onMoveStage: (item: KanbanCandidateItem, targetStageId: string) => void;
+  onRemoveCandidate: (item: KanbanCandidateItem) => void;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: item.applicationId,
@@ -92,26 +97,42 @@ function DraggableCandidateCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <Link
             href={`/people/${item.personId}`}
             onClick={(e) => e.stopPropagation()}
-            className="font-bold text-xs text-slate-100 flex items-center gap-1 hover:text-cyan-300 transition-colors"
+            className="font-bold text-xs text-slate-100 truncate block hover:text-cyan-300 transition-colors"
           >
             <span>{item.name}</span>
           </Link>
-          <div className="text-[10px] text-slate-400 font-mono">
+          <div className="text-[10px] text-slate-400 font-mono truncate">
             {item.seniority} &bull; English: {item.englishLevel}
           </div>
         </div>
 
-        {/* Scorecard pill if available */}
-        {item.scorecardAvg ? (
-          <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-0.5 shadow-[0_0_6px_rgba(0,240,255,0.2)]">
-            <Star className="h-2.5 w-2.5 fill-current" />
-            <span>{item.scorecardAvg.toFixed(1)}</span>
-          </span>
-        ) : null}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {/* Scorecard pill if available */}
+          {item.scorecardAvg ? (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-0.5 shadow-[0_0_6px_rgba(0,240,255,0.2)]">
+              <Star className="h-2.5 w-2.5 fill-current" />
+              <span>{item.scorecardAvg.toFixed(1)}</span>
+            </span>
+          ) : null}
+
+          {/* Remove from pipeline button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveCandidate(item);
+            }}
+            className="p-1 rounded-md text-slate-500 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer"
+            title="Remove candidate from this opening pipeline"
+          >
+            <Trash2 className="h-3 w-3" />
+            <span className="sr-only">Remove from pipeline</span>
+          </button>
+        </div>
       </div>
 
       {/* Skills */}
@@ -179,6 +200,7 @@ function KanbanColumn({
   onOpenScorecard,
   onOpenAddCandidate,
   onMoveStage,
+  onRemoveCandidate,
 }: {
   stage: PipelineStage;
   stages: PipelineStage[];
@@ -187,6 +209,7 @@ function KanbanColumn({
   onOpenScorecard: (item: KanbanCandidateItem) => void;
   onOpenAddCandidate?: (openingId: string) => void;
   onMoveStage: (item: KanbanCandidateItem, targetStageId: string) => void;
+  onRemoveCandidate: (item: KanbanCandidateItem) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage.id,
@@ -249,6 +272,7 @@ function KanbanColumn({
             stages={stages}
             onOpenScorecard={onOpenScorecard}
             onMoveStage={onMoveStage}
+            onRemoveCandidate={onRemoveCandidate}
           />
         ))}
 
@@ -269,6 +293,7 @@ export function KanbanBoard({
   initialCandidates,
   onCandidateHire,
   onCandidateReject,
+  onCandidateRemove,
   onOpenAddCandidate,
 }: KanbanBoardProps) {
   const [candidates, setCandidates] = useState<KanbanCandidateItem[]>(initialCandidates);
@@ -286,6 +311,10 @@ export function KanbanBoard({
 
   // Scorecard modal state
   const [activeScorecardCandidate, setActiveScorecardCandidate] =
+    useState<KanbanCandidateItem | null>(null);
+
+  // Remove from pipeline modal state
+  const [candidateToRemove, setCandidateToRemove] =
     useState<KanbanCandidateItem | null>(null);
 
   // Success alert
@@ -466,6 +495,7 @@ export function KanbanBoard({
                   onOpenScorecard={setActiveScorecardCandidate}
                   onOpenAddCandidate={onOpenAddCandidate}
                   onMoveStage={handleMoveStage}
+                  onRemoveCandidate={setCandidateToRemove}
                 />
               );
             })}
@@ -481,6 +511,25 @@ export function KanbanBoard({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Remove from Pipeline Modal */}
+      {candidateToRemove && (
+        <RemoveFromPipelineModal
+          isOpen={true}
+          candidateName={candidateToRemove.name}
+          openingTitle={opening.title}
+          applicationId={candidateToRemove.applicationId}
+          onClose={() => setCandidateToRemove(null)}
+          onRemoved={() => {
+            const removedAppId = candidateToRemove.applicationId;
+            setCandidates((prev) => prev.filter((c) => c.applicationId !== removedAppId));
+            if (onCandidateRemove) {
+              onCandidateRemove(removedAppId);
+            }
+            setCandidateToRemove(null);
+          }}
+        />
+      )}
 
       {/* Rejection Reason Modal */}
       {pendingRejection && (
