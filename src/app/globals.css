@@ -1,26 +1,212 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #12151c;
+    --foreground: #f1f5f9;
+    --card: #181d27;
+    --card-foreground: #f8fafc;
+    --popover: #181d27;
+    --popover-foreground: #f8fafc;
+    --primary: #00f0ff;
+    --primary-foreground: #0b111a;
+    --secondary: #202635;
+    --secondary-foreground: #e2e8f0;
+    --muted: #1a202c;
+    --muted-foreground: #94a3b8;
+    --accent: #252c3c;
+    --accent-foreground: #ffffff;
+    --destructive: #f43f5e;
+    --destructive-foreground: #ffffff;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.14);
+    --ring: #00f0ff;
+    --radius: 0.75rem;
+
+    /* Cool Neon Tokens */
+    --neon-cyan: #00f0ff;
+    --neon-arctic: #38bdf8;
+    --neon-teal: #14b8a6;
+    
+    /* Warm Neon Tokens */
+    --neon-amber: #f59e0b;
+    --neon-gold: #facc15;
+    --neon-coral: #f43f5e;
+    --neon-orange: #f97316;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #12151d;
+  color: #f1f5f9;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background-image: 
+    /* Directional specular reflection from top */
+    radial-gradient(ellipse 90% 45% at 50% -12%, rgba(56, 189, 248, 0.08) 0%, transparent 65%),
+    /* Ambient warm neon reflection in bottom corner */
+    radial-gradient(ellipse 60% 35% at 95% 95%, rgba(245, 158, 11, 0.035) 0%, transparent 60%),
+    /* Precision metallic linear sheen */
+    linear-gradient(180deg, #181d27 0%, #13161f 35%, #0f1218 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Precision metallic scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(18, 21, 29, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+/* Metallic Surfaces & Polished Titanium Panels */
+.metallic-surface {
+  background: linear-gradient(180deg, rgba(30, 36, 49, 0.88) 0%, rgba(20, 24, 34, 0.94) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: 
+    0 8px 32px -4px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+.metallic-card {
+  background: linear-gradient(180deg, rgba(27, 33, 44, 0.78) 0%, rgba(18, 22, 31, 0.88) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 
+    0 4px 18px rgba(0, 0, 0, 0.38), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.13),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.metallic-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 10px 32px rgba(0, 0, 0, 0.52), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+/* Polished Titanium Raised Control */
+.metallic-button {
+  background: linear-gradient(180deg, #2b3344 0%, #1d2331 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.35), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+.metallic-button:hover {
+  background: linear-gradient(180deg, #333d52 0%, #232b3b 100%);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 
+    0 4px 14px rgba(0, 0, 0, 0.45), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+
+.metallic-pill {
+  background: linear-gradient(180deg, rgba(37, 45, 60, 0.8) 0%, rgba(22, 27, 37, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Precision Bevel Effect */
+.titanium-bevel {
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.16), 
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Three-Level Glow Hierarchy */
+
+/* Level 1: Subtle edge lighting */
+.neon-cyan-border {
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.08);
+}
+
+.neon-amber-border {
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.08);
+}
+
+.neon-rose-border {
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.08);
+}
+
+/* Level 2: Noticeable hover / focus / active glow */
+.neon-cyan-glow-md {
+  box-shadow: 
+    0 0 16px rgba(0, 240, 255, 0.22), 
+    inset 0 0 8px rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.5) !important;
+}
+
+.neon-amber-glow-md {
+  box-shadow: 
+    0 0 16px rgba(245, 158, 11, 0.22), 
+    inset 0 0 8px rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+.neon-rose-glow-md {
+  box-shadow: 
+    0 0 16px rgba(244, 63, 94, 0.22), 
+    inset 0 0 8px rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.5) !important;
+}
+
+/* Level 3: Signature action glow (Active Gate Ceremony, Major Milestones) */
+.neon-cyan-signature {
+  box-shadow: 
+    0 0 28px rgba(0, 240, 255, 0.42), 
+    0 0 60px rgba(0, 240, 255, 0.16), 
+    inset 0 0 14px rgba(0, 240, 255, 0.12);
+  border-color: #00f0ff !important;
+}
+
+.neon-amber-signature {
+  box-shadow: 
+    0 0 28px rgba(245, 158, 11, 0.42), 
+    0 0 60px rgba(245, 158, 11, 0.16), 
+    inset 0 0 14px rgba(245, 158, 11, 0.12);
+  border-color: #f59e0b !important;
+}
+
+/* Interactive sheen wipe */
+.interactive-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+.interactive-glow:hover::before {
+  left: 100%;
 }
