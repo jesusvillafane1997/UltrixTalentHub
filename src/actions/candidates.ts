@@ -327,7 +327,8 @@ export async function getAvailableTalentPoolCandidates(openingId: string): Promi
 }
 
 export async function deleteCandidate(
-  personId: string
+  personId: string,
+  force: boolean = false
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createAdminSupabaseClient();
@@ -353,36 +354,48 @@ export async function deleteCandidate(
       return { success: false, error: 'Candidate record not found.' };
     }
 
-    // 2. Safeguard: Check if person has assignments or contracts (i.e. is/was a worker)
+    // 2. Safeguard: Check if person has assignments (i.e. is/was a placed worker)
     const { data: assignments } = await supabase
       .from('assignments')
       .select('id')
       .eq('person_id', personId)
       .limit(1);
 
-    if (person.status === 'active' || (assignments && assignments.length > 0)) {
+    const hasAssignments = assignments && assignments.length > 0;
+    const isActiveWorker = person.status === 'active';
+
+    if ((isActiveWorker || hasAssignments) && !force) {
       return {
         success: false,
         error:
-          'Active workers with client assignments or financial records cannot be permanently deleted. Archive the record instead.',
+          'Active workers with client assignments or financial records require confirmation to permanently delete. Check the confirmation box to force purge.',
       };
     }
 
-    // 3. Storage file cleanup: list and remove any files in documents bucket under cvs/[personId]
+    // 3. Storage file cleanup: list and remove any files in documents bucket under cvs/[personId] and contracts/[personId]
     try {
-      const { data: fileList, error: listErr } = await supabase.storage
+      const { data: cvFiles } = await supabase.storage
         .from('documents')
         .list(`cvs/${personId}`);
 
-      if (!listErr && fileList && fileList.length > 0) {
-        const filePaths = fileList.map((f) => `cvs/${personId}/${f.name}`);
+      if (cvFiles && cvFiles.length > 0) {
+        const filePaths = cvFiles.map((f) => `cvs/${personId}/${f.name}`);
+        await supabase.storage.from('documents').remove(filePaths);
+      }
+
+      const { data: contractFiles } = await supabase.storage
+        .from('documents')
+        .list(`contracts/${personId}`);
+
+      if (contractFiles && contractFiles.length > 0) {
+        const filePaths = contractFiles.map((f) => `contracts/${personId}/${f.name}`);
         await supabase.storage.from('documents').remove(filePaths);
       }
     } catch (storageErr: any) {
       console.warn('Storage cleanup non-blocking note:', storageErr?.message);
     }
 
-    // 4. Delete the person row (cascades to applications, documents, scorecards, reviews)
+    // 4. Delete the person row (cascades to assignments, contracts, comp records, applications, documents, scorecards, reviews)
     const { error: delErr } = await supabase
       .from('people')
       .delete()
@@ -398,8 +411,8 @@ export async function deleteCandidate(
         entity_id: personId,
         actor_id: actorId,
         action: 'deleted',
-        diff: { full_name: person.full_name, previous_status: person.status },
-        note: `Candidate ${person.full_name} was permanently purged.`,
+        diff: { full_name: person.full_name, previous_status: person.status, forced: force },
+        note: `Candidate ${person.full_name} was permanently purged${force ? ' (force override)' : ''}.`,
         created_at: nowIso,
       },
     ]);

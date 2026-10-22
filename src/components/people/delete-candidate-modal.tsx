@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { deleteCandidate } from '@/actions/candidates';
@@ -34,16 +34,23 @@ export function DeleteCandidateModal({
   onDeleted,
 }: DeleteCandidateModalProps) {
   const [loading, setLoading] = useState(false);
+  const [forceConfirm, setForceConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setForceConfirm(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen || !person) return null;
 
   const isBlockedFromHardDeletion =
     person.status === 'active' || hasAssignments;
 
-  const handleDelete = async () => {
+  const handleDelete = async (force = false) => {
     try {
       setLoading(true);
-      const res = await deleteCandidate(person.id);
+      const res = await deleteCandidate(person.id, force);
       if (res.success) {
         toast.success(`Candidate ${person.full_name} was permanently purged.`);
         if (typeof window !== 'undefined') {
@@ -156,13 +163,45 @@ export function DeleteCandidateModal({
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-3 border-t border-white/[0.08]">
+                {/* Force Purge Override Checkbox */}
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-rose-950/20 border border-rose-500/30 cursor-pointer hover:bg-rose-950/30 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={forceConfirm}
+                    onChange={(e) => setForceConfirm(e.target.checked)}
+                    className="mt-0.5 rounded border-white/20 text-rose-500 focus:ring-0 cursor-pointer"
+                  />
+                  <span className="text-xs text-slate-300 leading-snug">
+                    <strong className="text-rose-300">Admin Force Purge:</strong> I understand this candidate has placement/contract records. Permanently purge this person and cascade delete all their assignments, contracts, and compensation records.
+                  </span>
+                </label>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.08]">
                   <button
                     type="button"
+                    disabled={loading}
                     onClick={onClose}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 border border-white/10 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    Close
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading || !forceConfirm}
+                    onClick={() => handleDelete(true)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white flex items-center gap-1.5 transition-all shadow-lg shadow-rose-600/30 cursor-pointer active:scale-95"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Purging All Records...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Force Purge Candidate</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -204,7 +243,7 @@ export function DeleteCandidateModal({
                   <button
                     type="button"
                     disabled={loading}
-                    onClick={handleDelete}
+                    onClick={() => handleDelete(false)}
                     className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition-all shadow-lg shadow-rose-600/30 active:scale-95 cursor-pointer disabled:opacity-50"
                   >
                     {loading ? (
