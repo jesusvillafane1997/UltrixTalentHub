@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { loginUser, registerUser } from '@/actions/auth';
@@ -18,11 +18,22 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function LoginPage() {
+export default function LoginPage({
+  initialMode = 'login',
+}: {
+  initialMode?: 'login' | 'register';
+}) {
   const router = useRouter();
-  const { login } = useAuth();
+  const { user, currentUser, isLoading, login } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
+  // If already authenticated with an email, redirect to /dashboard
+  useEffect(() => {
+    if (!isLoading && (user?.email || (currentUser?.email && currentUser.email.length > 0))) {
+      router.replace('/dashboard');
+    }
+  }, [user, currentUser, isLoading, router]);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');

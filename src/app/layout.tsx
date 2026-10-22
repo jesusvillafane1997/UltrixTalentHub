@@ -21,9 +21,11 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="min-h-full bg-background text-foreground flex flex-col font-sans antialiased selection:bg-cyan-500/30 selection:text-white">
         <AuthProvider>
-          <Header />
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
           <div className="flex-1 flex overflow-hidden">
-            <Suspense fallback={<aside className="w-64 border-r border-white/[0.1] bg-[#141822]/95 shrink-0" />}>
+            <Suspense fallback={null}>
               <Sidebar />
             </Suspense>
             <main className="flex-1 overflow-y-auto p-6">

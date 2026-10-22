@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {}
-    router.push('/login');
+    router.push('/');
     router.refresh();
   };
 

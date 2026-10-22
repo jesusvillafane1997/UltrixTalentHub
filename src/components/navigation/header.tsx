@@ -90,7 +90,7 @@ export function Header() {
         {/* Brand & Telemetry */}
         <div className="flex items-center gap-5">
           <Link
-            href="/dashboard"
+            href={activeUser ? '/dashboard' : '/'}
             className="flex items-center font-bold tracking-tight text-slate-100 text-sm hover:text-white transition-colors"
           >
             ULTRIX TALENT HUB
@@ -115,20 +115,22 @@ export function Header() {
 
         {/* Global Search and User Session Controls */}
         <div className="flex items-center gap-3">
-          {/* Omni Search Button */}
-          <button
-            onClick={() => setIsCommandPaletteOpen(true)}
-            className="hidden sm:flex items-center justify-between gap-3 h-9 w-60 lg:w-68 px-3 rounded-xl bg-[#1a1f2b]/90 hover:bg-[#222938] border border-white/[0.1] hover:border-cyan-400/40 text-xs text-slate-300 hover:text-slate-100 transition-all shadow-inner group hover:shadow-[0_0_14px_rgba(0,240,255,0.15)]"
-          >
-            <div className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" />
-              <span className="text-slate-400 text-xs group-hover:text-slate-300">Search talent, jobs...</span>
-            </div>
-            <div className="flex items-center gap-0.5 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#131620] border border-white/10 text-slate-400 group-hover:text-slate-200">
-              <Command className="w-2.5 h-2.5" />
-              <span>K</span>
-            </div>
-          </button>
+          {/* Omni Search Button (only shown for authenticated staff) */}
+          {activeUser && (
+            <button
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="hidden sm:flex items-center justify-between gap-3 h-9 w-60 lg:w-68 px-3 rounded-xl bg-[#1a1f2b]/90 hover:bg-[#222938] border border-white/[0.1] hover:border-cyan-400/40 text-xs text-slate-300 hover:text-slate-100 transition-all shadow-inner group hover:shadow-[0_0_14px_rgba(0,240,255,0.15)]"
+            >
+              <div className="flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+                <span className="text-slate-400 text-xs group-hover:text-slate-300">Search talent, jobs...</span>
+              </div>
+              <div className="flex items-center gap-0.5 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#131620] border border-white/10 text-slate-400 group-hover:text-slate-200">
+                <Command className="w-2.5 h-2.5" />
+                <span>K</span>
+              </div>
+            </button>
+          )}
 
           {/* Dynamic User Profile Badge */}
           <div className="flex items-center gap-2 pl-2">
@@ -168,7 +170,7 @@ export function Header() {
               </div>
             ) : (
               <Link
-                href="/login"
+                href="/"
                 className="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-bold hover:bg-cyan-500/30 transition-all shadow-sm"
               >
                 Log in

@@ -24,6 +24,12 @@ import { motion } from 'framer-motion';
 
 export function Sidebar() {
   const pathname = usePathname();
+
+  // Hide sidebar on the landing / login authentication pages
+  if (pathname === '/' || pathname === '/login') {
+    return null;
+  }
+
   const { currentUser } = useAuth();
   const [peopleCount, setPeopleCount] = useState<number>(0);
   const [openingsCount, setOpeningsCount] = useState<number>(0);
@@ -48,7 +54,7 @@ export function Sidebar() {
   const navItems = [
     {
       label: 'HR Dashboard',
-      href: '/',
+      href: '/dashboard',
       icon: LayoutDashboard,
       badge: 'Live',
       badgeColor: 'text-cyan-300 bg-cyan-500/15 border-cyan-500/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]',
